@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/xml"
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -21,14 +22,23 @@ type Link struct {
 	Href string `xml:"href,attr"`
 }
 
-// relatedのリンクだけ残した構造体
 type RelatedLink struct {
 	Title string
 	Link  string
 }
 
 func main() {
-	f, err := os.Open("testdata/sample.atom")
+	inputFilePath := flag.String("i", "", "required: File path for the input Atom feed file")
+	flag.Parse()
+
+	// Check if the input file path is provided
+	if *inputFilePath == "" {
+		flag.PrintDefaults()
+		return
+	}
+
+	// parse inputfile path
+	f, err := os.Open(*inputFilePath)
 	if err != nil {
 		panic(err)
 	}
