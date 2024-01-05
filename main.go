@@ -13,8 +13,9 @@ type AtomFeed struct {
 }
 
 type Entry struct {
-	Title string `xml:"title"`
-	Link  []Link `xml:"link"`
+	Title string   `xml:"title"`
+	Links []Link   `xml:"link"`
+	Tags  []string `xml:"subject"`
 }
 
 type Link struct {
@@ -25,6 +26,7 @@ type Link struct {
 type RelatedLink struct {
 	Title string
 	Link  string
+	Tags  []string
 }
 
 func main() {
@@ -58,9 +60,9 @@ func main() {
 	var relatedLinks []RelatedLink
 
 	for _, entry := range feed.Entries {
-		for _, link := range entry.Link {
+		for _, link := range entry.Links {
 			if link.Rel == "related" {
-				relatedLinks = append(relatedLinks, RelatedLink{entry.Title, link.Href})
+				relatedLinks = append(relatedLinks, RelatedLink{entry.Title, link.Href, entry.Tags})
 			}
 		}
 	}
