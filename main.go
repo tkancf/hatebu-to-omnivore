@@ -39,26 +39,34 @@ func main() {
 		return
 	}
 
-	// parse inputfile path
 	f, err := os.Open(*inputFilePath)
 	if err != nil {
 		panic(err)
 	}
 	defer f.Close()
 
-	data, err := io.ReadAll(f)
+	relatedLinks, err := ParseAtomFeed(f)
 	if err != nil {
 		panic(err)
+	}
+
+	for _, link := range relatedLinks {
+		fmt.Printf("%+v\n", link)
+	}
+}
+
+func ParseAtomFeed(r io.Reader) ([]RelatedLink, error) {
+	data, err := io.ReadAll(r)
+	if err != nil {
+		return nil, err
 	}
 
 	var feed AtomFeed
-	err = xml.Unmarshal(data, &feed)
-	if err != nil {
-		panic(err)
+	if err := xml.Unmarshal(data, &feed); err != nil {
+		return nil, err
 	}
 
 	var relatedLinks []RelatedLink
-
 	for _, entry := range feed.Entries {
 		for _, link := range entry.Links {
 			if link.Rel == "related" {
@@ -66,7 +74,5 @@ func main() {
 			}
 		}
 	}
-	for _, link := range relatedLinks {
-		fmt.Printf("%+v\n", link)
-	}
+	return relatedLinks, nil
 }
