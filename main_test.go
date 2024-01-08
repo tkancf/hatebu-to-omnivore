@@ -3,6 +3,7 @@ package main
 import (
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestParseAtomFeed(t *testing.T) {
@@ -66,31 +67,45 @@ func TestParseAtomFeed(t *testing.T) {
 
 	// Check the number of related links
 	if len(relatedLinks) != 3 {
-		t.Errorf("Expected 2 related links, got %d", len(relatedLinks))
+		t.Errorf("Expected 3 related links, got %d", len(relatedLinks))
 	}
 
 	// Check the values of the related links
 	expectedLinks := []RelatedLink{
 		{
-			Title: "2023年の振り返り",
-			Link:  "https://tkancf.com/blog/2023-summary/",
-			Tags:  []string{"tkancf"},
+			Title:   "2023年の振り返り",
+			URL:     "https://tkancf.com/blog/2023-summary/",
+			State:   "ARCHIVED",
+			Tags:    []string{"tkancf"},
+			SavedAt: time.Date(2023, 12, 31, 9, 25, 43, 0, time.UTC),
 		},
 		{
-			Title: "Vimの設定整理した - 2020年版",
-			Link:  "https://tkancf.com/blog/vim%E3%81%AE%E8%A8%AD%E5%AE%9A%E6%95%B4%E7%90%86%E3%81%97%E3%81%9F-2020%E5%B9%B4%E7%89%88/",
-			Tags:  []string{"vim", "tkancf"},
+			Title:   "Vimの設定整理した - 2020年版",
+			URL:     "https://tkancf.com/blog/vim%E3%81%AE%E8%A8%AD%E5%AE%9A%E6%95%B4%E7%90%86%E3%81%97%E3%81%9F-2020%E5%B9%B4%E7%89%88/",
+			Tags:    []string{"vim", "tkancf"},
+			SavedAt: time.Date(2023, 12, 7, 0, 4, 45, 0, time.UTC), // 例示: 日付を追加
 		},
 		{
-			Title: "GitHub Mobile + GitHub issueでメモが良い感じ",
-			Link:  "https://tkancf.com/blog/2023-10-05/",
-			Tags:  []string{},
+			Title:   "GitHub Mobile + GitHub issueでメモが良い感じ",
+			URL:     "https://tkancf.com/blog/2023-10-05/",
+			Tags:    []string{},
+			SavedAt: time.Date(2023, 10, 6, 15, 19, 42, 0, time.UTC), // 例示: 日付を追加
 		},
 	}
 
 	for i, expectedLink := range expectedLinks {
-		if relatedLinks[i].Title != expectedLink.Title || relatedLinks[i].Link != expectedLink.Link || !equalSlices(relatedLinks[i].Tags, expectedLink.Tags) {
-			t.Errorf("Expected related link %d to be %+v, got %+v", i, expectedLink, relatedLinks[i])
+		actualLink := relatedLinks[i]
+		if actualLink.Title != expectedLink.Title {
+			t.Errorf("Link %d: Expected title %s, got %s", i, expectedLink.Title, actualLink.Title)
+		}
+		if actualLink.URL != expectedLink.URL {
+			t.Errorf("Link %d: Expected URL %s, got %s", i, expectedLink.URL, actualLink.URL)
+		}
+		if !equalSlices(actualLink.Tags, expectedLink.Tags) {
+			t.Errorf("Link %d: Expected tags %+v, got %+v", i, expectedLink.Tags, actualLink.Tags)
+		}
+		if !actualLink.SavedAt.Equal(expectedLink.SavedAt) {
+			t.Errorf("Link %d: Expected SavedAt %v, got %v", i, expectedLink.SavedAt, actualLink.SavedAt)
 		}
 	}
 }
