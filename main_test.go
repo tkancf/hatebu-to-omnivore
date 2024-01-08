@@ -82,12 +82,14 @@ func TestParseAtomFeed(t *testing.T) {
 		{
 			Title:   "Vimの設定整理した - 2020年版",
 			URL:     "https://tkancf.com/blog/vim%E3%81%AE%E8%A8%AD%E5%AE%9A%E6%95%B4%E7%90%86%E3%81%97%E3%81%9F-2020%E5%B9%B4%E7%89%88/",
+			State:   "ARCHIVED",
 			Tags:    []string{"vim", "tkancf"},
 			SavedAt: time.Date(2023, 12, 7, 0, 4, 45, 0, time.UTC), // 例示: 日付を追加
 		},
 		{
 			Title:   "GitHub Mobile + GitHub issueでメモが良い感じ",
 			URL:     "https://tkancf.com/blog/2023-10-05/",
+			State:   "ARCHIVED",
 			Tags:    []string{},
 			SavedAt: time.Date(2023, 10, 6, 15, 19, 42, 0, time.UTC), // 例示: 日付を追加
 		},

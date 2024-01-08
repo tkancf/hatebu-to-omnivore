@@ -29,13 +29,18 @@ type Link struct {
 type RelatedLink struct {
 	Title   string
 	URL     string
-	State   string  // ARCHIVED, SUCCEEDED
+	State   string // ARCHIVED, SUCCEEDED
 	Tags    []string
 	SavedAt time.Time
 }
 
+var (
+	inputFilePath = flag.String("i", "", "required: File path for the input Atom feed file")
+	stateBool     = flag.Bool("a", false, "optional: Set the state to ARCHIVED")
+	saveState     = "SUCCEEDED"
+)
+
 func main() {
-	inputFilePath := flag.String("i", "", "required: File path for the input Atom feed file")
 	flag.Parse()
 
 	// Check if the input file path is provided
@@ -72,6 +77,9 @@ func ParseAtomFeed(r io.Reader) ([]RelatedLink, error) {
 	}
 
 	var relatedLinks []RelatedLink
+	if *stateBool {
+		saveState = "ARCHIVED"
+	}
 	for _, entry := range feed.Entries {
 		for _, link := range entry.Links {
 			if link.Rel == "related" {
@@ -79,6 +87,7 @@ func ParseAtomFeed(r io.Reader) ([]RelatedLink, error) {
 					RelatedLink{
 						Title:   entry.Title,
 						URL:     link.Href,
+						State:   saveState,
 						Tags:    entry.Tags,
 						SavedAt: entry.Issued,
 					})
