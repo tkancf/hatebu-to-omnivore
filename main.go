@@ -1,11 +1,12 @@
 package main
 
 import (
+	"encoding/csv"
 	"encoding/xml"
 	"flag"
-	"fmt"
 	"io"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -60,8 +61,8 @@ func main() {
 		panic(err)
 	}
 
-	for _, link := range relatedLinks {
-		fmt.Printf("%+v\n", link)
+	if err := WriteRelatedLinksToCSV(relatedLinks); err != nil {
+		panic(err)
 	}
 }
 
@@ -95,4 +96,31 @@ func ParseAtomFeed(r io.Reader) ([]RelatedLink, error) {
 		}
 	}
 	return relatedLinks, nil
+}
+
+func WriteRelatedLinksToCSV(links []RelatedLink) error {
+	writer := csv.NewWriter(os.Stdout)
+	defer writer.Flush()
+
+	// Write the header
+	header := []string{"Title", "URL", "State", "Tags", "SavedAt"}
+	if err := writer.Write(header); err != nil {
+		return err
+	}
+
+	// Write the data
+	for _, link := range links {
+		record := []string{
+			link.Title,
+			link.URL,
+			link.State,
+			strings.Join(link.Tags, ", "),
+			link.SavedAt.Format(time.RFC3339),
+		}
+		if err := writer.Write(record); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
