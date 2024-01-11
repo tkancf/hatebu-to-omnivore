@@ -28,11 +28,11 @@ type Link struct {
 
 // url,state,labels,saved_at,published_at
 type RelatedLink struct {
-	SavedAt time.Time
 	Title   string   `csv:"title"`
 	URL     string   `csv:"url"`
 	State   string   `csv:"state"` // ARCHIVED, SUCCEEDED
 	Tags    []string `csv:"tags"`
+	SavedAt int64    `csv:"saved_at"`
 }
 
 var (
@@ -90,7 +90,7 @@ func ParseAtomFeed(r io.Reader) ([]RelatedLink, error) {
 						URL:     link.Href,
 						State:   saveState,
 						Tags:    entry.Tags,
-						SavedAt: entry.Issued,
+						SavedAt: entry.Issued.Unix(),
 					})
 			}
 		}
