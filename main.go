@@ -1,13 +1,14 @@
 package main
 
 import (
+	"encoding/csv"
 	"encoding/xml"
 	"flag"
 	"io"
 	"os"
+	"strconv"
+	"strings"
 	"time"
-
-	"github.com/gocarina/gocsv"
 )
 
 type AtomFeed struct {
@@ -26,13 +27,12 @@ type Link struct {
 	Href string `xml:"href,attr"`
 }
 
-// url,state,labels,saved_at,published_at
 type RelatedLink struct {
-	Title   string   `csv:"title"`
-	URL     string   `csv:"url"`
-	State   string   `csv:"state"` // ARCHIVED, SUCCEEDED
-	Tags    []string `csv:"tags"`
-	SavedAt int64    `csv:"saved_at"`
+	Title   string
+	URL     string
+	State   string // ARCHIVED, SUCCEEDED
+	Tags    []string
+	SavedAt int64
 }
 
 var (
@@ -44,7 +44,6 @@ var (
 func main() {
 	flag.Parse()
 
-	// Check if the input file path is provided
 	if *inputFilePath == "" {
 		flag.PrintDefaults()
 		return
@@ -60,8 +59,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	// Marshal related links to CSV and output to standard output
-	if err := gocsv.MarshalCSV(&relatedLinks, gocsv.DefaultCSVWriter(os.Stdout)); err != nil {
+
+	if err := OutputCSV(relatedLinks); err != nil {
 		panic(err)
 	}
 }
@@ -96,4 +95,37 @@ func ParseAtomFeed(r io.Reader) ([]RelatedLink, error) {
 		}
 	}
 	return relatedLinks, nil
+}
+
+func OutputCSV(relatedLinks []RelatedLink) error {
+	writer := csv.NewWriter(os.Stdout)
+	defer writer.Flush()
+	header := []string{"url", "state", "labels", "saved_at", "published_at"}
+	if err := writer.Write(header); err != nil {
+		return err
+	}
+	for _, link := range relatedLinks {
+		record := []string{
+			link.Title,
+			link.URL,
+			link.State,
+			formatLabels(link.Tags),
+			strconv.FormatInt(link.SavedAt, 10),
+		}
+		if err := writer.Write(record); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func formatLabels(labels []string) string {
+	if len(labels) == 0 {
+		return ""
+	}
+	quotedLabels := make([]string, len(labels))
+	for i, label := range labels {
+		quotedLabels[i] = `"` + strings.ReplaceAll(label, `"`, `""`) + `"`
+	}
+	return "[" + strings.Join(quotedLabels, ",") + "]"
 }
