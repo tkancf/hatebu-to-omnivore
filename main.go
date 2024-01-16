@@ -1,10 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"encoding/csv"
+	"encoding/json"
 	"encoding/xml"
 	"flag"
+	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -39,12 +43,21 @@ var (
 	inputFilePath = flag.String("i", "", "required: File path for the input Atom feed file")
 	stateBool     = flag.Bool("a", false, "optional: Set the state to ARCHIVED")
 	saveState     = "SUCCEEDED"
+	apiToken      = flag.String("t", "", "required: Omnivore API token")
+	apiUrl        = flag.String("u", "https://api-prod.omnivore.app/api/graphql", "optional: Omnivore API URL")
 )
 
 func main() {
 	flag.Parse()
 
 	if *inputFilePath == "" {
+		fmt.Println("Input file path is required")
+		flag.PrintDefaults()
+		return
+	}
+
+	if *apiToken == "" {
+		fmt.Println("API token is required")
 		flag.PrintDefaults()
 		return
 	}
@@ -63,6 +76,12 @@ func main() {
 	if err := OutputCSV(relatedLinks); err != nil {
 		panic(err)
 	}
+
+	url, err := getSignedURL()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Signed URL: %s\n", url)
 }
 
 func ParseAtomFeed(r io.Reader) ([]RelatedLink, error) {
@@ -128,4 +147,59 @@ func formatLabels(labels []string) string {
 		quotedLabels[i] = `"` + strings.ReplaceAll(label, `"`, `""`) + `"`
 	}
 	return "[" + strings.Join(quotedLabels, ",") + "]"
+}
+
+func getSignedURL() (string, error) {
+	const mutation = `
+		mutation UploadImportFile($type: UploadImportFileType!, $contentType: String!) {
+			uploadImportFile(type: $type, contentType: $contentType) {
+				... on UploadImportFileError {
+					errorCodes
+				}
+				... on UploadImportFileSuccess {
+					uploadSignedUrl
+				}
+			}
+		}
+	`
+	variables := map[string]string{
+		"type":        "URL_LIST",
+		"contentType": "text/csv",
+	}
+
+	body := map[string]interface{}{
+		"query":     mutation,
+		"variables": variables,
+	}
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		return "", fmt.Errorf("error marshaling JSON: %w", err)
+	}
+
+	req, err := http.NewRequest("POST", *apiUrl, bytes.NewBuffer(jsonBody))
+	if err != nil {
+		return "", fmt.Errorf("error creating request: %w", err)
+	}
+
+	req.Header.Set("Authorization", *apiToken)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("error making request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	var response map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return "", fmt.Errorf("error decoding response: %w", err)
+	}
+
+	uploadSignedUrl, ok := response["data"].(map[string]interface{})["uploadImportFile"].(map[string]interface{})["uploadSignedUrl"].(string)
+	if !ok {
+		return "", fmt.Errorf("error retrieving signed URL")
+	}
+
+	return uploadSignedUrl, nil
 }
