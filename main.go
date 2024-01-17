@@ -203,3 +203,26 @@ func getSignedURL() (string, error) {
 
 	return uploadSignedUrl, nil
 }
+
+func UploadToSignedUrl(signedUrl string, data io.Reader) error {
+	req, err := http.NewRequest(http.MethodPut, signedUrl, data)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Content-Type", "text/csv")
+	req.Header.Set("type", "URL_LIST")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to upload: %s", resp.Status)
+	}
+
+	return nil
+}
