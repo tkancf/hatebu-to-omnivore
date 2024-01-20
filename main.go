@@ -43,7 +43,7 @@ var (
 	inputFilePath = flag.String("i", "", "required: File path for the input Atom feed file")
 	stateBool     = flag.Bool("a", false, "optional: Set the state to ARCHIVED")
 	saveState     = "SUCCEEDED"
-	apiToken      = flag.String("t", "", "required: Omnivore API token")
+	apiToken      = flag.String("k", "", "required: Omnivore API token")
 	apiUrl        = flag.String("u", "https://api-prod.omnivore.app/api/graphql", "optional: Omnivore API URL")
 )
 
