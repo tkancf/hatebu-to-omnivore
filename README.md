@@ -2,6 +2,12 @@
 
 はてなブックマークからエクスポートしたデータを Omnivore へインポートするためのプログラム
 
+## Install
+
+```sh
+$ go install github.com/tkancf/hatebu-to-omnivore@latest
+```
+
 ## Usage
 
 ### はてなブックマークからデータをエクスポート
@@ -35,10 +41,4 @@ $ hatebu-to-omnivore -i <エクスポートしたAtomフィードデータ> -k <
 
 ```sh
 $ hatebu-to-omnivore -i <エクスポートしたAtomフィードデータ> -a -k <OmnivoreのAPIキー> -u <OmnivoreのAPI URL>
-```
-
-## Install
-
-```sh
-$ go get github.com/tkancf/hatebu-to-omnivore
 ```
