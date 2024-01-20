@@ -1,6 +1,9 @@
 package main
 
 import (
+	"bytes"
+	"io"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -125,4 +128,42 @@ func equalSlices(a, b []string) bool {
 		}
 	}
 	return true
+}
+
+func TestOutputCSV(t *testing.T) {
+	relatedLinks := []RelatedLink{
+		{
+			URL:     "https://example.com/link1",
+			State:   "ARCHIVED",
+			Tags:    []string{"tag1", "tag2"},
+			SavedAt: time.Now().Unix(),
+		},
+		{
+			URL:     "https://example.com/link2",
+			State:   "ARCHIVED",
+			Tags:    []string{"tag3", "tag4"},
+			SavedAt: time.Now().Unix(),
+		},
+	}
+
+	expectedCSV := `url,state,labels,saved_at,published_at
+https://example.com/link1,ARCHIVED,"[""tag1"",""tag2""]",` + strconv.FormatInt(relatedLinks[0].SavedAt, 10) + `,
+https://example.com/link2,ARCHIVED,"[""tag3"",""tag4""]",` + strconv.FormatInt(relatedLinks[1].SavedAt, 10) + `,
+`
+
+	reader, err := OutputCSV(relatedLinks)
+	if err != nil {
+		t.Errorf("OutputCSV returned an error: %v", err)
+	}
+
+	buf := new(bytes.Buffer)
+	_, err = io.Copy(buf, reader)
+	if err != nil {
+		t.Errorf("Failed to read CSV: %v", err)
+	}
+
+	actualCSV := buf.String()
+	if actualCSV != expectedCSV {
+		t.Errorf("Expected CSV:\n%s\n\nGot:\n%s", expectedCSV, actualCSV)
+	}
 }
