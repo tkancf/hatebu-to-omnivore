@@ -73,9 +73,11 @@ func main() {
 		panic(err)
 	}
 
-	if err := OutputCSV(relatedLinks); err != nil {
+	csv, err := OutputCSV(relatedLinks)
+	if err != nil {
 		panic(err)
 	}
+	fmt.Println(csv)
 
 	url, err := getSignedURL()
 	if err != nil {
@@ -116,26 +118,36 @@ func ParseAtomFeed(r io.Reader) ([]RelatedLink, error) {
 	return relatedLinks, nil
 }
 
-func OutputCSV(relatedLinks []RelatedLink) error {
-	writer := csv.NewWriter(os.Stdout)
-	defer writer.Flush()
+func OutputCSV(relatedLinks []RelatedLink) (io.Reader, error) {
+	buf := new(bytes.Buffer)
+	writer := csv.NewWriter(buf)
+
+	// ヘッダーを書き込む
 	header := []string{"url", "state", "labels", "saved_at", "published_at"}
 	if err := writer.Write(header); err != nil {
-		return err
+		return nil, err
 	}
+
+	// 各リンクをCSVに書き込む
 	for _, link := range relatedLinks {
 		record := []string{
-			link.Title,
 			link.URL,
 			link.State,
 			formatLabels(link.Tags),
 			strconv.FormatInt(link.SavedAt, 10),
+			"", // published_atは現在の構造体には存在しないため、空白を設定
 		}
 		if err := writer.Write(record); err != nil {
-			return err
+			return nil, err
 		}
 	}
-	return nil
+
+	writer.Flush()
+	if err := writer.Error(); err != nil {
+		return nil, err
+	}
+
+	return buf, nil
 }
 
 func formatLabels(labels []string) string {
