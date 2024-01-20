@@ -10,18 +10,18 @@ $ go install github.com/tkancf/hatebu-to-omnivore@latest
 
 ## Usage
 
-### はてなブックマークからデータをエクスポート
+### 1. はてなブックマークからデータをエクスポート
 
 1. はてなブックマークにログイン
 2. [はてなブックマークのデータ管理 設定ページ](https://b.hatena.ne.jp/-/my/config/data_management) にアクセス
 3. Atomフィード形式でエクスポート
 
-### Omnivore のAPIキーを取得
+### 2. Omnivore のAPIキーを取得
 
 1. Omnivore にログイン
 2. [APIキーの設定ページ](https://omnivore.app/settings/api) にアクセス
 
-### Omnivore へインポート
+### 3. Omnivore へインポート
 
 #### `hatebu-to-omnivore` にオプションを指定してインポートを実行
 
