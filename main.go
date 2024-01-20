@@ -77,13 +77,15 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(csv)
 
 	url, err := getSignedURL()
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Signed URL: %s\n", url)
+
+	if err := UploadToSignedUrl(url, csv); err != nil {
+		panic(err)
+	}
 }
 
 func ParseAtomFeed(r io.Reader) ([]RelatedLink, error) {
@@ -122,20 +124,18 @@ func OutputCSV(relatedLinks []RelatedLink) (io.Reader, error) {
 	buf := new(bytes.Buffer)
 	writer := csv.NewWriter(buf)
 
-	// ヘッダーを書き込む
 	header := []string{"url", "state", "labels", "saved_at", "published_at"}
 	if err := writer.Write(header); err != nil {
 		return nil, err
 	}
 
-	// 各リンクをCSVに書き込む
 	for _, link := range relatedLinks {
 		record := []string{
 			link.URL,
 			link.State,
 			formatLabels(link.Tags),
 			strconv.FormatInt(link.SavedAt, 10),
-			"", // published_atは現在の構造体には存在しないため、空白を設定
+			"", // set published_at to blank because it does not exist in the atom file of hatebu
 		}
 		if err := writer.Write(record); err != nil {
 			return nil, err
@@ -210,7 +210,7 @@ func getSignedURL() (string, error) {
 
 	uploadSignedUrl, ok := response["data"].(map[string]interface{})["uploadImportFile"].(map[string]interface{})["uploadSignedUrl"].(string)
 	if !ok {
-		return "", fmt.Errorf("error retrieving signed URL")
+		return "", fmt.Errorf("error retrieving signed URL: %s", response["data"].(map[string]interface{})["uploadImportFile"].(map[string]interface{})["errorCodes"])
 	}
 
 	return uploadSignedUrl, nil
