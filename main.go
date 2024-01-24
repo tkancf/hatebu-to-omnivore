@@ -78,7 +78,7 @@ func main() {
 		panic(err)
 	}
 
-	url, err := getSignedURL()
+	url, err := GetSignedURL()
 	if err != nil {
 		panic(err)
 	}
@@ -161,7 +161,7 @@ func formatLabels(labels []string) string {
 	return "[" + strings.Join(quotedLabels, ",") + "]"
 }
 
-func getSignedURL() (string, error) {
+func GetSignedURL() (string, error) {
 	const mutation = `
 		mutation UploadImportFile($type: UploadImportFileType!, $contentType: String!) {
 			uploadImportFile(type: $type, contentType: $contentType) {
